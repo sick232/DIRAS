@@ -6,22 +6,41 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.ext.declarative import declarative_base
 import logging
+import os
 from src.shared.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Create database engine
-engine = create_engine(
-    settings.database_url,
-    echo=settings.database_echo,
-    pool_pre_ping=True,  # Verify connections before using
-)
+# Try to create PostgreSQL engine, fallback to SQLite if not available
+try:
+    # Create database engine
+    engine = create_engine(
+        settings.database_url,
+        echo=settings.database_echo,
+        pool_pre_ping=True,  # Verify connections before using
+    )
+    logger.info("✓ PostgreSQL engine created")
+except Exception as e:
+    logger.warning(f"⚠ PostgreSQL not available: {e}")
+    logger.info("Falling back to SQLite for development")
+    
+    # Create SQLite fallback
+    os.makedirs("data", exist_ok=True)
+    engine = create_engine(
+        "sqlite:///data/diras.db",
+        echo=settings.database_echo,
+        connect_args={"check_same_thread": False}
+    )
 
 # Create session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Create base class for models
 Base = declarative_base()
+
+# Import models to register them with Base
+# This MUST happen after Base is defined but before init_db() is called
+from src.models.document import Document, DocumentChunk, Embedding, IndexingLog  # noqa: E402, F401
 
 def get_db() -> Session:
     """

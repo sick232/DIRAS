@@ -3,7 +3,7 @@ import '../styles/QueryInterface.css'
 
 function QueryInterface({ onSearch, loading }) {
   const [query, setQuery] = useState('')
-  const [topK, setTopK] = useState('5')
+  const [topK, setTopK] = useState('15')
   const [docType, setDocType] = useState('')
 
   const handleSubmit = (e) => {
@@ -85,7 +85,7 @@ function QueryInterface({ onSearch, loading }) {
               className="reset-button"
               onClick={() => {
                 setQuery('')
-                setTopK('5')
+                setTopK('15')
                 setDocType('')
               }}
               disabled={loading}

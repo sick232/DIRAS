@@ -3,9 +3,10 @@ DIRAS FastAPI Main Application
 Phase 2 Implementation - Free Stack
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 import logging
 from datetime import datetime
 import os
@@ -20,6 +21,9 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Import database
+from src.shared.database import get_db
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -36,6 +40,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ============================================================================
+# Request/Response Models
+# ============================================================================
+
+class QueryRequest(BaseModel):
+    question: str
+    top_k: int = 15
+    document_type: str = None
 
 # ============================================================================
 # Health Check Endpoints
@@ -129,42 +142,184 @@ async def api_info():
     }
 
 # ============================================================================
-# Document Endpoints (Placeholder for Sprint 2)
-# ============================================================================
-
-@app.get("/api/v1/documents")
-async def list_documents(skip: int = 0, limit: int = 10):
-    """List available documents (Sprint 2: will return OCR'd documents)"""
-    return {
-        "count": 0,
-        "documents": [],
-        "message": "Documents will be available after Sprint 2 data pipeline"
-    }
-
-@app.post("/api/v1/documents/upload")
-async def upload_document(file_path: str):
-    """Upload and process a document (Sprint 2)"""
-    return {
-        "message": "Document upload will be implemented in Sprint 2",
-        "status": "pending"
-    }
-
-# ============================================================================
-# Query Endpoints (Placeholder for Sprint 6)
+# Query & Search Endpoints
 # ============================================================================
 
 @app.post("/api/v1/query")
-async def query(query_text: str, top_k: int = 5):
+async def query(
+    request: QueryRequest,
+    db = Depends(get_db)
+):
     """
-    Execute a query using retrieval + RAG
-    Placeholder: Will be implemented in Sprint 6
+    Execute a query using RAG pipeline
+    Real implementation: retrieves documents + generates answer with Grok
     """
-    return {
-        "query": query_text,
-        "message": "RAG pipeline will be available after Sprint 6",
-        "status": "pending",
-        "results": []
-    }
+    
+    try:
+        from src.services.rag_engine import get_rag_engine
+        import time
+        
+        start_time = time.time()
+        
+        # Get RAG engine
+        rag = get_rag_engine(top_k=request.top_k)
+        
+        # Generate answer
+        result = rag.generate_answer(
+            query=request.question,
+            db=db,
+            top_k=request.top_k,
+            document_type_filter=request.document_type
+        )
+        
+        # Add processing metadata
+        result["processing_time"] = time.time() - start_time
+        
+        logger.info(f"Query processed in {result['processing_time']:.2f}s")
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Query endpoint error: {e}")
+        return {
+            "answer": "",
+            "sources": [],
+            "error": str(e),
+            "confidence": 0.0,
+            "processing_time": 0
+        }
+
+# ============================================================================
+# Scraping & Indexing Endpoints
+# ============================================================================
+
+@app.post("/api/v1/scrape")
+async def start_scraping(max_docs: int = 200):
+    """
+    Start document scraping from government sources
+    Returns immediately; scraping happens in background
+    """
+    
+    try:
+        import importlib
+        scraper_module = importlib.import_module('src.01-data-pipeline.scraper_runner')
+        ScraperRunner = getattr(scraper_module, 'ScraperRunner')
+        
+        logger.info(f"Starting scraper to download {max_docs} documents...")
+        
+        runner = ScraperRunner()
+        result = runner.run_moad_scraper(max_docs=max_docs)
+        
+        return {
+            "status": result["status"],
+            "documents_downloaded": result.get("documents_downloaded", 0),
+            "duration_seconds": result.get("duration_seconds", 0),
+            "next_steps": result.get("next_steps", []),
+            "errors": result.get("errors", [])
+        }
+        
+    except Exception as e:
+        logger.error(f"Scraping error: {e}")
+        return {
+            "status": "failed",
+            "error": str(e)
+        }
+
+@app.get("/api/v1/documents")
+async def list_documents(skip: int = 0, limit: int = 10, db = Depends(get_db)):
+    """List documents from database with status"""
+    
+    try:
+        from src.models.document import Document
+        
+        total = db.query(Document).count()
+        documents = db.query(Document).offset(skip).limit(limit).all()
+        
+        return {
+            "total": total,
+            "skip": skip,
+            "limit": limit,
+            "documents": [
+                {
+                    "id": doc.id,
+                    "title": doc.title,
+                    "source_url": doc.source_url,
+                    "source_type": doc.source_type,
+                    "document_type": doc.document_type,
+                    "status": doc.status,
+                    "is_indexed": doc.is_indexed,
+                    "ocr_confidence": doc.ocr_confidence,
+                    "downloaded_date": doc.downloaded_date.isoformat() if doc.downloaded_date else None
+                }
+                for doc in documents
+            ]
+        }
+        
+    except Exception as e:
+        logger.error(f"List documents error: {e}")
+        return {"error": str(e), "documents": []}
+
+@app.get("/api/v1/index-status")
+async def get_index_status(db = Depends(get_db)):
+    """Get indexing progress and statistics"""
+    
+    try:
+        from src.models.document import Document, DocumentChunk
+        
+        total_docs = db.query(Document).count()
+        indexed_docs = db.query(Document).filter(Document.is_indexed == True).count()
+        total_chunks = db.query(DocumentChunk).count()
+        indexed_chunks = db.query(DocumentChunk).filter(DocumentChunk.is_indexed == True).count()
+        
+        return {
+            "total_documents": total_docs,
+            "indexed_documents": indexed_docs,
+            "pending_documents": total_docs - indexed_docs,
+            "total_chunks": total_chunks,
+            "indexed_chunks": indexed_chunks,
+            "pending_chunks": total_chunks - indexed_chunks,
+            "completion_percentage": round((indexed_chunks / total_chunks * 100) if total_chunks > 0 else 0, 1)
+        }
+        
+    except Exception as e:
+        logger.error(f"Index status error: {e}")
+        return {"error": str(e)}
+
+# ============================================================================
+# Processing Endpoints
+# ============================================================================
+
+@app.post("/api/v1/process-documents")
+async def process_documents(limit: int = 50, db = Depends(get_db)):
+    """Process documents through OCR pipeline"""
+    
+    try:
+        from src.services.document_processor import get_document_processor
+        
+        processor = get_document_processor()
+        result = processor.batch_process_documents(limit=limit, db=db)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Document processing error: {e}")
+        return {"error": str(e), "status": "failed"}
+
+@app.post("/api/v1/index-documents")
+async def index_documents(db = Depends(get_db)):
+    """Index documents into vector store"""
+    
+    try:
+        from src.services.indexer import get_document_indexer
+        
+        indexer = get_document_indexer()
+        result = indexer.index_all_documents(db=db)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Document indexing error: {e}")
+        return {"error": str(e), "status": "failed"}
 
 # ============================================================================
 # Classification Endpoints (Placeholder for Sprint 3)
@@ -253,12 +408,46 @@ async def startup_event():
     """Initialize services on app startup"""
     logger.info("DIRAS API starting up...")
     logger.info(f"Environment: {os.getenv('ENVIRONMENT', 'development')}")
-    logger.info("Phase 2 Free Stack implementation ready")
-    # TODO: Initialize services
-    # - Database connection
-    # - Vector DB connection
-    # - Model loading
-    # - Metrics initialization
+    
+    try:
+        # Initialize database and create tables
+        from src.shared.database import init_db
+        init_db()
+        logger.info("✓ Database initialized")
+    except Exception as e:
+        logger.error(f"✗ Database initialization failed: {e}")
+    
+    try:
+        # Load embedding model
+        from src.services.embeddings import get_embedding_generator
+        embedder = get_embedding_generator()
+        logger.info(f"✓ Embedding model loaded: {embedder.model_name}")
+    except Exception as e:
+        logger.warning(f"⚠ Embedding model loading failed: {e}")
+    
+    try:
+        # Initialize vector store
+        from src.services.vectorstore import get_vector_store
+        vector_store = get_vector_store()
+        info = vector_store.get_collection_info()
+        logger.info(f"✓ Vector store initialized. Collection: {info.get('collection_name')}")
+    except Exception as e:
+        logger.warning(f"⚠ Vector store initialization failed: {e}")
+    
+    try:
+        # Test Groq API connection
+        from src.shared.config import settings
+        from src.services.llm.groq_client import get_groq_client
+        
+        if settings.groq_api_key:
+            groq = get_groq_client(api_key=settings.groq_api_key)
+            logger.info("✓ Groq LLM API configured")
+        else:
+            logger.warning("⚠ Groq API key not configured")
+    except Exception as e:
+        logger.warning(f"⚠ Groq LLM initialization failed: {e}")
+    
+    logger.info("Phase 2 Free Stack implementation ready ✓")
 
 @app.on_event("shutdown")
 async def shutdown_event():

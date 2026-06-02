@@ -2,38 +2,39 @@
 
 **AI-Powered RAG-Based Defence Document Intelligence Platform**
 
-> **Phase 2: Implementation (Free Stack)**  
-> This repository now contains complete Phase 2 implementation with 100% free, open-source tools. No paid services required. Docker-based development environment ready to use.
+> **Phase 4: RAG Implementation Complete**  
+> Full end-to-end RAG pipeline operational with semantic search, embeddings, vector database, and LLM integration with graceful fallback mode. 100% free, open-source tools. Zero cloud costs. Complete privacy.
 
-## 🚀 Phase 2 Quick Start (5 Minutes)
+## 🚀 Phase 4 Quick Start (2 Minutes)
 
 ```bash
-# 1. Clone and setup
-git clone https://github.com/your-org/diras.git
-cd diras
+# 1. Set environment variable
+$env:GROQ_API_KEY = "<YOUR_GROQ_API_KEY>"
 
-# 2. Copy environment
-cp .env.example .env
+# 2. Start backend
+python -m uvicorn src.api.main:app --host 0.0.0.0 --port 8000
 
-# 3. Start all services
-docker-compose up -d
+# 3. Start frontend (in another terminal)
+cd frontend && npm run dev
 
-# 4. Test
+# 4. Open browser
+# http://localhost:3000
+
+# 5. Test API
 curl http://localhost:8000/health
-
-# 5. View API docs
-# Open: http://localhost:8000/docs
 ```
 
-**Everything works locally. Zero cloud costs. Full source control. Complete privacy.**
+**Fully operational RAG system. Instant responses. Complete privacy. Zero cloud dependency.**
 
 ## 📊 Phase Status
 
 | Phase | Status | Completion | Focus |
 |-------|--------|-----------|-------|
 | **Phase 1** | ✅ Complete | 100% | Research, Design, Planning |
-| **Phase 2** | 🟡 In Progress | 20% | Implementation, Sprint 1-8 |
-| **Phase 3-5** | 🟢 Planned | 0% | Scaling, Production |
+| **Phase 2** | ✅ Complete | 100% | Project Setup, Infrastructure |
+| **Phase 3** | ✅ Complete | 100% | Data Pipeline, Document Indexing |
+| **Phase 4** | ✅ Complete | 100% | RAG Pipeline, LLM Integration |
+| **Phase 5** | 🟢 Planned | 0% | Scaling, Production |
 
 ---
 

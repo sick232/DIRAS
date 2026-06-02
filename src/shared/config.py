@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     chromadb_host: str = "localhost"
     chromadb_port: int = 8001
     chromadb_collection_name: str = "diras_documents"
+    chromadb_persist_directory: str = "data/vectorstore"
     
     # Elasticsearch (Search)
     elasticsearch_host: str = "localhost"
@@ -37,6 +38,27 @@ class Settings(BaseSettings):
     ollama_model: str = "llama2"
     llm_temperature: float = 0.7
     llm_max_tokens: int = 1024
+    
+    # Gemini LLM Configuration (PRIMARY)
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-1.5-flash"
+    gemini_temperature: float = 0.3
+    
+    # Grok LLM Configuration (SECONDARY)
+    grok_api_key: str = ""
+    grok_model: str = "grok-beta"
+    grok_temperature: float = 0.3
+    
+    # Groq Configuration (TERTIARY)
+    groq_api_key: str = ""
+    groq_model: str = "llama-3.1-70b-versatile"
+    
+    # LLM Retry Configuration (Phase 4B)
+    llm_max_retries: int = 3
+    llm_retry_delay: float = 1.0  # seconds
+    llm_retry_backoff: float = 2.0  # exponential backoff multiplier
+    llm_request_timeout: int = 30  # seconds
+    llm_api_validation_enabled: bool = True
     
     # Models
     embedding_model: str = "all-MiniLM-L6-v2"
@@ -62,10 +84,29 @@ class Settings(BaseSettings):
     ocr_use_layout_parser: bool = True
     
     # RAG Configuration
-    rag_retrieval_top_k: int = 5
+    rag_retrieval_top_k: int = 15
     rag_context_window: int = 4000
     rag_reranker_top_k: int = 10
     hallucination_detection_enabled: bool = True
+    
+    # Query Complexity Detection (Phase 2)
+    complexity_detection_enabled: bool = True
+    complexity_simple_threshold: int = 10  # words
+    complexity_medium_threshold: int = 20  # words
+    complexity_simple_top_k: int = 5       # documents
+    complexity_medium_top_k: int = 10      # documents
+    complexity_complex_top_k: int = 15     # documents
+    
+    # Document Chunking (Phase 3 - Semantic-Aware)
+    chunking_strategy: str = "semantic"
+    chunk_size_default: int = 512
+    chunk_overlap_default: int = 100
+    chunk_size_simple: int = 300
+    chunk_overlap_simple: int = 50
+    chunk_size_complex: int = 768
+    chunk_overlap_complex: int = 150
+    preserve_paragraph_boundaries: bool = True
+    min_chunk_size: int = 50
     
     # Logging
     log_level: str = "INFO"
@@ -89,6 +130,7 @@ class Settings(BaseSettings):
             self.data_raw_dir,
             self.data_processed_dir,
             self.data_embeddings_dir,
+            self.chromadb_persist_directory,
             self.models_dir,
             self.logs_dir,
         ]
