@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     
     # Gemini LLM Configuration (PRIMARY)
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-1.5-flash"
+    gemini_model: str = "gemini-2.5-flash"
     gemini_temperature: float = 0.3
     
     # Grok LLM Configuration (SECONDARY)

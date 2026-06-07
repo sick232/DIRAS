@@ -195,7 +195,7 @@ class RAGEngine:
                         "answer": gemini_result['answer'],
                         "sources": self._extract_sources(retrieved_chunks),
                         "processing_time": time.time() - start_time,
-                        "model": gemini_result.get('model', 'gemini-1.5-flash'),
+                        "model": gemini_result.get('model', 'gemini-2.5-flash'),
                         "confidence": gemini_result.get('confidence', 0.90),
                         "error": None,
                         "tokens_used": gemini_result.get('tokens_used', 0)
