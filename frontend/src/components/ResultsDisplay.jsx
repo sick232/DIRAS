@@ -1,7 +1,20 @@
 
+import { useState } from 'react'
 import '../styles/ResultsDisplay.css'
 
 function ResultsDisplay({ results }) {
+  const [debugOpen, setDebugOpen] = useState({
+    query: true,
+    retrievedChunks: false,
+    retrievedContext: false,
+    promptSent: false,
+    geminiOutput: false,
+    groqOutput: false,
+    grokOutput: false,
+    fallbackOutput: false,
+    finalAnswer: true
+  })
+
   if (!results) return null
 
   const getConfidenceClass = (confidence) => {
@@ -12,6 +25,49 @@ function ResultsDisplay({ results }) {
 
   const formatConfidence = (confidence) => {
     return ((confidence || 0.85) * 100).toFixed(0)
+  }
+
+  const toggleSection = (key) => {
+    setDebugOpen((prev) => ({
+      ...prev,
+      [key]: !prev[key]
+    }))
+  }
+
+  const formatDebugValue = (value) => {
+    if (value === undefined || value === null) return 'No data available.'
+    if (typeof value === 'string') return value
+    return JSON.stringify(value, null, 2)
+  }
+
+  const debugChunksText = results.debug_chunks
+    ? results.debug_chunks
+        .map((chunk, idx) =>
+          `Document: ${chunk.document}\nSimilarity: ${chunk.similarity?.toFixed(4)}\nText:\n${chunk.text}`
+        )
+        .join('\n\n---\n')
+    : ''
+
+  const renderDebugSection = (key, title, value) => {
+    if (!value) return null
+    return (
+      <div className={`debug-card ${debugOpen[key] ? 'open' : ''}`}>
+        <button
+          type="button"
+          className="debug-header"
+          onClick={() => toggleSection(key)}
+        >
+          <span>{debugOpen[key] ? '▼' : '▶'} {title}</span>
+          <span className="debug-toggle">
+            {debugOpen[key] ? 'Hide' : 'Show'}
+          </span>
+        </button>
+
+        <div className="debug-content">
+          <pre>{formatDebugValue(value)}</pre>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -142,6 +198,19 @@ function ResultsDisplay({ results }) {
           </div>
         </div>
       )}
+
+      {/* Debug Visibility */}
+      <div className="debug-section-container">
+        {renderDebugSection('query', 'User Query', results.query)}
+        {renderDebugSection('retrievedChunks', 'Retrieved Chunks', debugChunksText)}
+        {renderDebugSection('retrievedContext', 'Retrieved Context', results.retrieved_context)}
+        {renderDebugSection('promptSent', 'Prompt Sent To LLM', results.prompt_sent)}
+        {renderDebugSection('geminiOutput', 'Gemini Output', results.gemini_raw_response)}
+        {renderDebugSection('groqOutput', 'Groq Output', results.groq_raw_response)}
+        {renderDebugSection('grokOutput', 'Grok Output', results.grok_raw_response)}
+        {renderDebugSection('fallbackOutput', 'Fallback Output', results.fallback_raw_response)}
+        {renderDebugSection('finalAnswer', 'Final Intelligence Report', results.final_answer || results.answer)}
+      </div>
 
       {/* Related Intelligence */}
       {results.related_documents &&

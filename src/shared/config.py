@@ -52,6 +52,7 @@ class Settings(BaseSettings):
     # Groq Configuration (TERTIARY)
     groq_api_key: str = ""
     groq_model: str = "llama-3.1-70b-versatile"
+    groq_temperature: float = 0.3
     
     # LLM Retry Configuration (Phase 4B)
     llm_max_retries: int = 3
