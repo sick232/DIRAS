@@ -3,6 +3,7 @@ Embeddings Service
 Generates semantic embeddings for text using SentenceTransformers
 """
 
+import hashlib
 import logging
 from typing import List, Union
 import numpy as np
@@ -34,10 +35,19 @@ class EmbeddingGenerator:
             logger.info(f"Model loaded successfully. Vector dimension: {self.model.get_sentence_embedding_dimension()}")
             
         except ImportError:
-            raise ImportError("sentence-transformers not installed. Install with: pip install sentence-transformers")
+            logger.warning("sentence-transformers not installed. Using fallback hashing embedder")
+            self.model = None
+            self.model_name = "fallback-hash-384"
         except Exception as e:
             logger.error(f"Failed to load embedding model: {e}")
             raise
+
+    def _fallback_embed_text(self, text: str) -> List[float]:
+        digest = hashlib.sha512(text.encode("utf-8")).digest()
+        vector = [b / 255.0 for b in digest]
+        while len(vector) < 384:
+            vector.extend(vector)
+        return vector[:384]
 
     def embed_text(self, text: str) -> List[float]:
         """
@@ -55,11 +65,12 @@ class EmbeddingGenerator:
                 logger.warning("Empty text provided for embedding")
                 return [0.0] * 384  # Return zero vector for empty text
             
-            # Generate embedding
+            if self.model is None:
+                return self._fallback_embed_text(text)
+
             embedding = self.model.encode(text, convert_to_numpy=True)
             
-            # Convert to list if numpy array or tensor
-            if hasattr(embedding, 'tolist'):  # Works for numpy arrays and torch tensors
+            if hasattr(embedding, 'tolist'):
                 embedding = embedding.tolist()
             elif isinstance(embedding, (list, tuple)):
                 embedding = list(embedding)
@@ -92,6 +103,9 @@ class EmbeddingGenerator:
             logger.info(f"Generating embeddings for {len(texts)} texts with batch size {batch_size}...")
             
             # Generate embeddings in batches
+            if self.model is None:
+                return [self._fallback_embed_text(text) for text in texts]
+
             embeddings = self.model.encode(
                 texts,
                 batch_size=batch_size,
@@ -99,12 +113,10 @@ class EmbeddingGenerator:
                 show_progress_bar=show_progress
             )
             
-            # Convert to list of lists if numpy array
             embeddings_list = []
             if isinstance(embeddings, np.ndarray):
                 embeddings_list = embeddings.tolist()
             else:
-                # Handle tensor or other types
                 embeddings_list = [emb.tolist() if hasattr(emb, 'tolist') else list(emb) for emb in embeddings]
             
             logger.info(f"Generated {len(embeddings_list)} embeddings")

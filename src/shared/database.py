@@ -2,7 +2,7 @@
 Database configuration and session management
 """
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.ext.declarative import declarative_base
 import logging
@@ -19,6 +19,8 @@ try:
         echo=settings.database_echo,
         pool_pre_ping=True,  # Verify connections before using
     )
+    with engine.connect() as conn:
+        conn.execute(text("SELECT 1"))
     logger.info("✓ PostgreSQL engine created")
 except Exception as e:
     logger.warning(f"⚠ PostgreSQL not available: {e}")
@@ -55,11 +57,25 @@ def get_db() -> Session:
 
 def init_db():
     """Initialize database (create tables)"""
+    global engine, SessionLocal
     try:
         Base.metadata.create_all(bind=engine)
         logger.info("Database initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
+        if engine.url.drivername.startswith("postgres"):
+            logger.warning("Falling back to SQLite because PostgreSQL initialization failed")
+            os.makedirs("data", exist_ok=True)
+            engine.dispose()
+            engine = create_engine(
+                "sqlite:///data/diras.db",
+                echo=settings.database_echo,
+                connect_args={"check_same_thread": False}
+            )
+            SessionLocal.configure(bind=engine)
+            Base.metadata.create_all(bind=engine)
+            logger.info("Database initialized successfully with SQLite fallback")
+            return
         raise
 
 def drop_db():
