@@ -423,7 +423,13 @@ async def startup_event():
         logger.error(f"✗ Database initialization failed: {e}")
     
     try:
-        # Load embedding model
+        # Verify sentence-transformers availability and load embedding model
+        try:
+            import sentence_transformers  # type: ignore
+            logger.info("✅ sentence-transformers imported successfully")
+        except Exception as e:
+            logger.error(f"❌ sentence-transformers failed: {e}")
+
         from src.services.embeddings import get_embedding_generator
         embedder = get_embedding_generator()
         logger.info(f"✓ Embedding model loaded: {embedder.model_name}")
@@ -431,11 +437,12 @@ async def startup_event():
         logger.warning(f"⚠ Embedding model loading failed: {e}")
     
     try:
-        # Initialize vector store
+        # Initialize vector store and log collection stats
         from src.services.vectorstore import get_vector_store
         vector_store = get_vector_store()
         info = vector_store.get_collection_info()
         logger.info(f"✓ Vector store initialized. Collection: {info.get('collection_name')}")
+        logger.info(f"🔥 ChromaDB contains {info.get('total_embeddings', 0)} chunks")
     except Exception as e:
         logger.warning(f"⚠ Vector store initialization failed: {e}")
     
