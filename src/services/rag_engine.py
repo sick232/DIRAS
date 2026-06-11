@@ -148,7 +148,13 @@ class RAGEngine:
 
         try:
             from src.services.retrieval import get_document_retriever
-            from src.services.llm.gemini_client import get_gemini_client
+            try:
+                from src.services.llm.gemini_client import get_gemini_client
+                gemini_available = True
+            except Exception as e:
+                get_gemini_client = None
+                gemini_available = False
+                logger.warning(f"Gemini client unavailable: {e}")
             from src.services.llm.groq_client import get_groq_client
             from src.services.llm.grok_client import get_grok_client
             from src.shared.config import settings
@@ -271,7 +277,7 @@ class RAGEngine:
                 final_answer=final_answer
             )
 
-            logger.info("RAG: Attempting LLM generation (Gemini → Groq → Grok → Fallback)...")
+            logger.info("RAG: Attempting LLM generation (Groq → Gemini → Grok → Fallback)...")
             llm_errors = []
             gemini_model = None
             groq_model = None
@@ -280,34 +286,10 @@ class RAGEngine:
             groq_conf = None
             grok_conf = None
 
-            # Gemini
-            try:
-                if settings.gemini_api_key:
-                    logger.info("RAG: Calling Gemini (PRIMARY)")
-                    gemini = get_gemini_client(api_key=settings.gemini_api_key)
-                    gemini_result = gemini.generate_answer(
-                        query=query,
-                        context=context,
-                        temperature=settings.gemini_temperature,
-                        max_tokens=1024
-                    )
-                    if gemini_result.get('error'):
-                        raise Exception(gemini_result.get('error'))
-                    gemini_output = gemini_result.get('answer', '')
-                    llm_outputs['gemini'] = gemini_output
-                    gemini_model = gemini_result.get('model', 'gemini-2.5-flash')
-                    gemini_conf = gemini_result.get('confidence', 0.90)
-                else:
-                    logger.info("⚠ Gemini API key not configured")
-            except Exception as e:
-                err = f"Gemini error: {e}"
-                llm_errors.append(err)
-                logger.warning(err)
-
             # Groq
             try:
                 if settings.groq_api_key:
-                    logger.info("RAG: Calling Groq (SECONDARY)")
+                    logger.info("RAG: Calling Groq (PRIMARY)")
                     groq = get_groq_client(api_key=settings.groq_api_key)
                     groq_result = groq.generate_answer(
                         query=query,
@@ -325,6 +307,30 @@ class RAGEngine:
                     logger.info("⚠ Groq API key not configured")
             except Exception as e:
                 err = f"Groq error: {e}"
+                llm_errors.append(err)
+                logger.warning(err)
+
+            # Gemini
+            try:
+                if gemini_available and settings.gemini_api_key:
+                    logger.info("RAG: Calling Gemini (SECONDARY)")
+                    gemini = get_gemini_client(api_key=settings.gemini_api_key)
+                    gemini_result = gemini.generate_answer(
+                        query=query,
+                        context=context,
+                        temperature=settings.gemini_temperature,
+                        max_tokens=1024
+                    )
+                    if gemini_result.get('error'):
+                        raise Exception(gemini_result.get('error'))
+                    gemini_output = gemini_result.get('answer', '')
+                    llm_outputs['gemini'] = gemini_output
+                    gemini_model = gemini_result.get('model', 'gemini-2.5-flash')
+                    gemini_conf = gemini_result.get('confidence', 0.90)
+                else:
+                    logger.info("⚠ Gemini is unavailable or not configured; skipping Gemini")
+            except Exception as e:
+                err = f"Gemini error: {e}"
                 llm_errors.append(err)
                 logger.warning(err)
 
