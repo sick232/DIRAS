@@ -167,6 +167,10 @@ class RAGEngine:
             logger.info(f"RAG: Processing query: {query[:100]}...")
             
             logger.info("RAG: Retrieving documents...")
+            
+            # LOG: Query start information
+            logger.info(f"📊 LOGGING: Query request - top_k={top_k}, document_type_filter={document_type_filter}")
+            
             retriever = get_document_retriever(top_k)
             retrieval_result = retriever.retrieve(
                 query,
@@ -176,6 +180,9 @@ class RAGEngine:
             )
 
             if retrieval_result['status'] != 'success':
+                # LOG: Retrieval failure
+                logger.info(f"🗂️ LOGGING: Retrieval failed - Error: {retrieval_result.get('error', 'Unknown error')}")
+                
                 result = {
                     "answer": "",
                     "query": query,
@@ -214,6 +221,11 @@ class RAGEngine:
             
             retrieved_chunks = retrieval_result['results']
             debug_chunks = self._build_debug_chunks(retrieved_chunks)
+            
+            # LOG: Number of documents and chunks retrieved
+            doc_count = retrieval_result.get('document_count', len(set(c.get('metadata', {}).get('document_id') for c in retrieved_chunks)))
+            logger.info(f"📚 LOGGING: Loaded {doc_count} unique documents from database")
+            logger.info(f"📊 LOGGING: Retrieved {len(retrieved_chunks)} chunks from ChromaDB")
 
             if not retrieved_chunks:
                 logger.warning("No documents retrieved for query")
@@ -256,6 +268,9 @@ class RAGEngine:
             logger.info("RAG: Formatting context...")
             context = self._format_context(retrieved_chunks)
             retrieved_context = context
+            
+            # LOG: Retrieved context length
+            logger.info(f"📊 LOGGING: Retrieved context length = {len(context)} characters")
             debug_prompt = (
                 "You are a Defence Intelligence Assistant.\n\n"
                 "DOCUMENTS:\n"
@@ -264,6 +279,9 @@ class RAGEngine:
                 f"{query}\n\n"
                 "ANSWER:\n"
             )
+            
+            # LOG: Prompt sent to Groq
+            logger.info(f"📊 LOGGING: Prompt sent to Groq (length={len(debug_prompt)} chars, first 200 chars: {debug_prompt[:200]}...)")
 
             self._print_debug_terminal_sections(
                 query=query,
@@ -300,6 +318,10 @@ class RAGEngine:
                     if groq_result.get('error'):
                         raise Exception(groq_result.get('error'))
                     groq_output = groq_result.get('answer', '')
+                    
+                    # LOG: Raw Groq response
+                    logger.info(f"📊 LOGGING: Raw Groq response (length={len(groq_output)} chars, first 300 chars: {groq_output[:300]}...)")
+                    
                     llm_outputs['groq'] = groq_output
                     groq_model = groq_result.get('model', 'mixtral-8x7b-32768')
                     groq_conf = groq_result.get('confidence', 0.85)
@@ -408,6 +430,11 @@ class RAGEngine:
                 return "".join(report_sections)
 
             final_answer = _synthesize_report(query, combined_analysis, context, sources)
+            
+            # LOG: Final answer before API return
+            logger.info(f"📊 LOGGING: Final answer length = {len(final_answer)} characters")
+            logger.info(f"📊 LOGGING: Final answer (first 400 chars): {final_answer[:400]}...")
+            
             model_used = "multi-model-synthesis"
             confidence_values = [c for c in (gemini_conf, groq_conf, grok_conf) if isinstance(c, (int, float))]
             confidence = max(confidence_values) if confidence_values else 0.75
