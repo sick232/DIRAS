@@ -6,6 +6,8 @@ Manages ChromaDB for storing and retrieving document embeddings
 import logging
 from typing import List, Dict, Optional, Tuple
 import json
+import os
+import shutil
 
 logger = logging.getLogger(__name__)
 
@@ -43,8 +45,21 @@ class VectorStore:
         except ImportError:
             raise ImportError("ChromaDB not installed. Install with: pip install chromadb")
         except Exception as e:
-            logger.error(f"Failed to initialize ChromaDB: {e}")
-            raise
+            if "no such column: collections.topic" in str(e):
+                logger.warning("ChromaDB schema mismatch detected; rebuilding vector store persistence")
+                shutil.rmtree(persist_directory, ignore_errors=True)
+                os.makedirs(persist_directory, exist_ok=True)
+
+                self.client = chromadb.PersistentClient(path=persist_directory)
+                self.collection_name = collection_name
+                self.collection = self.client.get_or_create_collection(
+                    name=collection_name,
+                    metadata={"hnsw:space": "cosine"}
+                )
+                logger.info(f"ChromaDB vector store rebuilt and initialized. Collection: {collection_name}, Path: {persist_directory}")
+            else:
+                logger.error(f"Failed to initialize ChromaDB: {e}")
+                raise
 
     def add_embeddings(
         self,
