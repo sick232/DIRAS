@@ -443,6 +443,28 @@ async def startup_event():
         info = vector_store.get_collection_info()
         logger.info(f"✓ Vector store initialized. Collection: {info.get('collection_name')}")
         logger.info(f"🔥 ChromaDB contains {info.get('total_embeddings', 0)} chunks")
+
+        try:
+            from src.shared.database import SessionLocal
+            from src.models.document import Document, DocumentChunk
+            from src.services.indexer import get_document_indexer
+
+            with SessionLocal() as startup_db:
+                total_documents = startup_db.query(Document).count()
+                total_chunks_in_db = startup_db.query(DocumentChunk).count()
+                logger.info(f"📌 Startup check: {total_documents} documents in database, {total_chunks_in_db} chunks in database")
+
+                if total_documents > 0 and info.get('total_embeddings', 0) == 0:
+                    logger.warning("❗ ChromaDB contains 0 embeddings while documents exist; rebuilding vector index")
+                    indexer = get_document_indexer()
+                    rebuild_result = indexer.index_all_documents(db=startup_db, batch_size=32, skip_indexed=False)
+                    logger.info(f"🔄 Rebuild result: {rebuild_result}")
+
+                    info = vector_store.get_collection_info()
+                    logger.info(f"🔥 Final ChromaDB chunk count after rebuild: {info.get('total_embeddings', 0)}")
+
+        except Exception as e:
+            logger.warning(f"⚠ Startup index rebuild check failed: {e}")
     except Exception as e:
         logger.warning(f"⚠ Vector store initialization failed: {e}")
     
