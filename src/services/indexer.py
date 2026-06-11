@@ -59,6 +59,11 @@ class DocumentIndexer:
             vector_store = get_vector_store()
             embedder = get_embedding_generator()
             
+            # Report DB totals for diagnosis
+            total_documents_in_db = db.query(Document).count()
+            total_chunks_in_db = db.query(DocumentChunk).count()
+            logger.info(f"📌 Indexer startup: {total_documents_in_db} total documents in DB, {total_chunks_in_db} total document chunks in DB")
+            
             # Get unindexed documents
             query = db.query(Document).filter(Document.is_indexed == False)
             
@@ -90,8 +95,14 @@ class DocumentIndexer:
                         DocumentChunk.document_id == document.id
                     ).all()
                     
+                    logger.info(
+                        f"📌 Document {document.id} ('{document.title[:60]}') has {len(chunks)} chunks"
+                    )
+                    
                     if not chunks:
-                        logger.warning(f"No chunks found for document {document.id}")
+                        logger.warning(
+                            f"No chunks found for document {document.id} ('{document.title[:60]}')"
+                        )
                         continue
                     
                     # Prepare data for embedding
