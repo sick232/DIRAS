@@ -24,6 +24,8 @@ logger = logging.getLogger(__name__)
 
 # Import database
 from src.shared.database import get_db
+# Register download router
+from src.api.download_excel import router as download_router
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -40,6 +42,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Register routers
+app.include_router(download_router)
 
 # ============================================================================
 # Request/Response Models
