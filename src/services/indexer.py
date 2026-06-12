@@ -103,6 +103,9 @@ class DocumentIndexer:
                         logger.warning(
                             f"No chunks found for document {document.id} ('{document.title[:60]}')"
                         )
+                        logger.info(
+                            f"Document {document.id} status={document.status} content_processed_length={len(document.content_processed or '')}"
+                        )
                         continue
                     
                     # Prepare data for embedding

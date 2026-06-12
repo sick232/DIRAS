@@ -10,6 +10,7 @@ from pydantic import BaseModel
 import logging
 from datetime import datetime
 import os
+import urllib.parse
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -413,6 +414,12 @@ async def startup_event():
     """Initialize services on app startup"""
     logger.info("DIRAS API starting up...")
     logger.info(f"Environment: {os.getenv('ENVIRONMENT', 'development')}")
+    
+    database_url = os.getenv('DATABASE_URL')
+    logger.info(f"DATABASE_URL present: {bool(database_url)}")
+    if database_url:
+        parsed = urllib.parse.urlparse(database_url)
+        logger.info(f"DB host: {parsed.hostname}, port: {parsed.port}, scheme: {parsed.scheme}")
     
     try:
         # Initialize database and create tables
