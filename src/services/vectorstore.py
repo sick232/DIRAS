@@ -29,9 +29,13 @@ class VectorStore:
         
         try:
             import chromadb
+            from chromadb.config import Settings as ChromaSettings
+            
+            # Disable anonymous telemetry in environments like Railway
+            chroma_settings = ChromaSettings(anonymized_telemetry=False)
             
             # Initialize client using new PersistentClient API (v1.5.x+)
-            self.client = chromadb.PersistentClient(path=persist_directory)
+            self.client = chromadb.PersistentClient(path=persist_directory, settings=chroma_settings)
             self.collection_name = collection_name
             
             # Get or create collection

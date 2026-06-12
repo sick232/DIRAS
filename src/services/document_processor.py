@@ -67,13 +67,18 @@ class DocumentProcessor:
             
             # Check if already processed
             if doc.status == "ocr_complete":
-                logger.info(f"Document {document_id} already OCR processed")
-                return {
-                    "status": "skipped",
-                    "document_id": document_id,
-                    "reason": "already_processed",
-                    "text_length": len(doc.content_processed) if doc.content_processed else 0
-                }
+                from src.models.document import DocumentChunk
+                existing_chunks = db.query(DocumentChunk).filter(DocumentChunk.document_id == document_id).count()
+                if existing_chunks > 0:
+                    logger.info(f"Document {document_id} already OCR processed and has {existing_chunks} chunks")
+                    return {
+                        "status": "skipped",
+                        "document_id": document_id,
+                        "reason": "already_processed",
+                        "text_length": len(doc.content_processed) if doc.content_processed else 0,
+                        "chunks": existing_chunks
+                    }
+                logger.warning(f"Document {document_id} marked ocr_complete but has no chunks; retrying chunking")
             
             # Run OCR pipeline
             logger.info(f"Processing document {document_id}: {doc.title}")
@@ -87,7 +92,8 @@ class DocumentProcessor:
                 }
             
             # Mock OCR processing (in production: OCRPipeline.process())
-            doc.content_processed = doc.content_raw
+            if not doc.content_processed:
+                doc.content_processed = doc.content_raw
             doc.ocr_confidence = 0.92
             doc.status = "ocr_complete"
             
