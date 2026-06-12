@@ -106,6 +106,23 @@ class DocumentIndexer:
                         logger.info(
                             f"Document {document.id} status={document.status} content_processed_length={len(document.content_processed or '')}"
                         )
+                        if document.status == "ocr_complete" and document.content_processed:
+                            logger.info(f"Attempting chunk regeneration for document {document.id}")
+                            from src.services.document_processor import get_document_processor
+                            processor = get_document_processor()
+                            regen_result = processor.process_document(document.id, db)
+                            logger.info(f"Chunk regeneration result for document {document.id}: {regen_result}")
+                            chunks = db.query(DocumentChunk).filter(
+                                DocumentChunk.document_id == document.id
+                            ).all()
+                            logger.info(
+                                f"After regeneration: document {document.id} has {len(chunks)} chunks"
+                            )
+                        
+                    if not chunks:
+                        logger.warning(
+                            f"Skipping document {document.id} because no chunks are available"
+                        )
                         continue
                     
                     # Prepare data for embedding
