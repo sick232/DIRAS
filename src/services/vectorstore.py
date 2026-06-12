@@ -54,7 +54,8 @@ class VectorStore:
                 shutil.rmtree(persist_directory, ignore_errors=True)
                 os.makedirs(persist_directory, exist_ok=True)
 
-                self.client = chromadb.PersistentClient(path=persist_directory)
+                chroma_settings = ChromaSettings(anonymized_telemetry=False)
+                self.client = chromadb.PersistentClient(path=persist_directory, settings=chroma_settings)
                 self.collection_name = collection_name
                 self.collection = self.client.get_or_create_collection(
                     name=collection_name,
