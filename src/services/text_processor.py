@@ -192,6 +192,14 @@ class TextProcessor:
             
             logger.info(f"Document chunked into {len(chunks)} chunks using {self.strategy} strategy")
             
+            # Fallback: if no chunks were created but text exists, use entire document as single chunk
+            if len(chunks) == 0 and text.strip():
+                logger.warning(
+                    f"No chunks created from {len(text.split())} words. Using entire document as single chunk."
+                )
+                chunks = [(text, 0)]
+                logger.info(f"Fallback: created 1 chunk from entire document")
+            
             # Store chunks in database if session provided
             if db and document_id:
                 self._store_chunks_in_db(document_id, chunks, db)
