@@ -1,0 +1,454 @@
+
+.results-display {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* =========================
+   ANSWER CARD
+========================= */
+
+.answer-section {
+  background: rgba(19, 34, 56, 0.78);
+
+  backdrop-filter: blur(18px);
+
+  border: 1px solid rgba(255,255,255,.08);
+
+  border-radius: 24px;
+
+  padding: 30px;
+}
+
+.answer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 24px;
+
+  gap: 16px;
+
+  flex-wrap: wrap;
+}
+
+.answer-header h2 {
+  color: white;
+  font-size: 1.5rem;
+}
+
+.confidence-badge {
+  padding: 10px 18px;
+
+  border-radius: 999px;
+
+  font-size: .9rem;
+
+  font-weight: 700;
+}
+
+.confidence-high {
+  background: rgba(74,222,128,.15);
+  color: #4ade80;
+}
+
+.confidence-medium {
+  background: rgba(245,158,11,.15);
+  color: #f59e0b;
+}
+
+.confidence-low {
+  background: rgba(239,68,68,.15);
+  color: #ef4444;
+}
+
+.answer-content {
+  margin-bottom: 24px;
+}
+
+.answer-text {
+  color: #e2e8f0;
+
+  line-height: 1.9;
+
+  font-size: 1rem;
+}
+
+.report-heading {
+  color: #38bdf8;
+  margin: 20px 0 10px;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.report-paragraph {
+  color: #cbd5e1;
+  margin: 0 0 12px;
+  line-height: 1.8;
+}
+
+.report-bullets {
+  margin: 0 0 18px 24px;
+  padding: 0;
+  list-style: disc;
+  color: #e2e8f0;
+}
+
+.report-bullets li {
+  margin-bottom: 10px;
+}
+
+/* =========================
+   METADATA CARDS
+========================= */
+
+.metadata {
+  display: grid;
+
+  grid-template-columns: repeat(auto-fit,minmax(180px,1fr));
+
+  gap: 15px;
+}
+
+.meta-item {
+  background: rgba(255,255,255,.03);
+
+  border: 1px solid rgba(255,255,255,.06);
+
+  border-radius: 16px;
+
+  padding: 15px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  color: #cbd5e1;
+}
+
+.meta-icon {
+  font-size: 1.3rem;
+}
+
+/* =========================
+   SOURCES
+========================= */
+
+.sources-section {
+  background: rgba(19,34,56,.78);
+
+  backdrop-filter: blur(18px);
+
+  border: 1px solid rgba(255,255,255,.08);
+
+  border-radius: 24px;
+
+  padding: 30px;
+}
+
+.sources-section h3 {
+  color: white;
+
+  margin-bottom: 20px;
+
+  font-size: 1.3rem;
+}
+
+.sources-list {
+  display: grid;
+
+  grid-template-columns: repeat(auto-fit,minmax(320px,1fr));
+
+  gap: 16px;
+}
+
+.source-item {
+  background: rgba(255,255,255,.03);
+
+  border: 1px solid rgba(255,255,255,.08);
+
+  border-radius: 18px;
+
+  padding: 18px;
+
+  transition: .3s;
+}
+
+.source-item:hover {
+  transform: translateY(-4px);
+
+  border-color: #00d4ff;
+}
+
+.source-number {
+  width: 34px;
+  height: 34px;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #00d4ff;
+
+  color: #07111f;
+
+  font-weight: 700;
+
+  margin-bottom: 12px;
+}
+
+.source-text {
+  color: white;
+
+  line-height: 1.6;
+
+  margin-bottom: 15px;
+}
+
+.source-link {
+  display: inline-block;
+
+  padding: 8px 14px;
+
+  border-radius: 12px;
+
+  background: rgba(0,212,255,.15);
+
+  color: #00d4ff;
+
+  font-size: .85rem;
+}
+
+.debug-section-container {
+  display: grid;
+  gap: 16px;
+}
+
+.debug-card {
+  background: rgba(19, 34, 56, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  overflow: hidden;
+  transition: border-color 0.3s ease, transform 0.3s ease;
+}
+
+.debug-card:hover {
+  transform: translateY(-2px);
+  border-color: #00d4ff;
+}
+
+.debug-card.open {
+  border-color: #00d4ff;
+}
+
+.debug-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 22px;
+  color: #e2e8f0;
+  background: rgba(0, 0, 0, 0.12);
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.debug-toggle {
+  color: #7dd3fc;
+  font-weight: 600;
+}
+
+.debug-content {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.35s ease, opacity 0.35s ease, padding 0.35s ease;
+  padding: 0 22px;
+}
+
+.debug-card.open .debug-content {
+  max-height: 1200px;
+  opacity: 1;
+  padding: 18px 22px 22px;
+}
+
+.debug-content pre {
+  margin: 0;
+  color: #cbd5e1;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
+/* =========================
+   RELATED DOCS
+========================= */
+
+.related-section {
+  background: rgba(19,34,56,.78);
+
+  border: 1px solid rgba(255,255,255,.08);
+
+  border-radius: 24px;
+
+  padding: 30px;
+}
+
+.related-section h3 {
+  color: white;
+  margin-bottom: 20px;
+}
+
+.related-list {
+  display: grid;
+
+  grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
+
+  gap: 15px;
+}
+
+.related-item {
+  background: rgba(255,255,255,.03);
+
+  border: 1px solid rgba(255,255,255,.06);
+
+  border-radius: 16px;
+
+  padding: 15px;
+
+  color: #cbd5e1;
+
+  transition: .3s;
+}
+
+.related-item:hover {
+  border-color: #00d4ff;
+}
+
+/* =========================
+   NO RESULTS
+========================= */
+
+.no-results {
+  background: rgba(19,34,56,.78);
+
+  border: 1px solid rgba(255,255,255,.08);
+
+  border-radius: 24px;
+
+  padding: 50px;
+
+  text-align: center;
+
+  color: #94a3b8;
+}
+
+@media(max-width:768px) {
+
+  .answer-section,
+  .sources-section,
+  .related-section {
+    padding: 20px;
+  }
+
+  .answer-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sources-list {
+    grid-template-columns: 1fr;
+  }
+  
+}
+
+/* =========================
+   INTELLIGENCE BANNER
+========================= */
+
+.intelligence-banner {
+  background: rgba(0, 212, 255, 0.08);
+
+  border: 1px solid rgba(0, 212, 255, 0.2);
+
+  border-radius: 16px;
+
+  padding: 16px;
+
+  margin-bottom: 20px;
+}
+
+.intelligence-banner strong {
+  display: block;
+
+  color: #00d4ff;
+
+  margin-bottom: 6px;
+
+  font-size: 0.95rem;
+}
+
+.intelligence-banner p {
+  color: #cbd5e1;
+
+  line-height: 1.6;
+
+  font-size: 0.95rem;
+}
+
+/* =========================
+   SOURCE CONTENT
+========================= */
+
+.source-content {
+  width: 100%;
+}
+
+/* =========================
+   METADATA HOVER
+========================= */
+
+.meta-item {
+  transition: 0.3s ease;
+}
+
+.meta-item:hover {
+  transform: translateY(-2px);
+
+  border-color: rgba(0,212,255,.3);
+
+  background: rgba(0,212,255,.04);
+}
+
+/* =========================
+   ANSWER CARD HOVER
+========================= */
+
+.answer-section:hover,
+.sources-section:hover,
+.related-section:hover {
+  border-color: rgba(0,212,255,.15);
+}
+
+/* =========================
+   GLOW EFFECT
+========================= */
+
+.answer-section {
+  box-shadow:
+    0 0 0 rgba(0,212,255,0),
+    0 10px 30px rgba(0,0,0,.25);
+}
+
+.answer-section:hover {
+  box-shadow:
+    0 0 20px rgba(0,212,255,.08),
+    0 10px 30px rgba(0,0,0,.25);
+}
+

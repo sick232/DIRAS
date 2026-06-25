@@ -1,0 +1,57 @@
+{
+  "documents\\Manual_of_Standardisation_2023.pdf": {
+    "hash": "81dd8a07bddc7586b1ae1cd511b007c7c36b253f8f144cf61597054ba5ad63b0",
+    "document_id": 52,
+    "ingested_at": "2026-06-15T20:54:49.159832"
+  },
+  "documents\\ResProblemsDIACoEsFeb2025Updated.pdf": {
+    "hash": "1afb34ebc62d227300093bbae9371bbbf5700e12ae14156902f0573cf2e4d709",
+    "document_id": 53,
+    "ingested_at": "2026-06-15T20:54:50.617705"
+  },
+  "documents\\ResProblemsDIACoEsOct2024Latest.pdf": {
+    "hash": "33a98f7f748122698488bfe7ff28dcd011784ddbf109cb0f76d7c1249b603af8",
+    "document_id": 54,
+    "ingested_at": "2026-06-15T20:54:51.464638"
+  },
+  "documents\\supplement2010.pdf": {
+    "hash": "c8dd98dba0217f527c1abc00ea6133b8aa6e66a2ee564daabd76acc5a9f9002f",
+    "document_id": 55,
+    "ingested_at": "2026-06-15T20:55:04.513564"
+  },
+  "documents\\DAP2030new.pdf": {
+    "hash": "e71b6bac54fa73540c06dea8e3a65fb3c1eca09d11e84af9086cd11ddb033e02",
+    "document_id": 56,
+    "ingested_at": "2026-06-18T19:09:14.855407"
+  },
+  "documents\\Defence-Instruction-AG5-Conflicts-of-Interest.pdf": {
+    "hash": "a515fe1a8deb1239a640e31e62ad9beb7a1a69c6368825a029922f6fa55592fe",
+    "document_id": 57,
+    "ingested_at": "2026-06-18T19:09:15.764882"
+  },
+  "documents\\DFPDS9721.pdf": {
+    "hash": "1da4411ed5307c1901d0f8d584591a15046e2409caee761b3321ce405b14142e",
+    "document_id": 58,
+    "ingested_at": "2026-06-18T19:09:20.039543"
+  },
+  "documents\\DPMref2019.pdf": {
+    "hash": "090c0ef631d9c2b0c1d94d54b7c81d4e63caa80df8d55113aa5971b18b3e06c0",
+    "document_id": 59,
+    "ingested_at": "2026-06-18T19:09:38.748405"
+  },
+  "documents\\DRAFT-DAP-2026_0.pdf": {
+    "hash": "8070ab9fa9b6fe119266d3bc189a1a999e281f28b2552dabcdbd2700dbc9509e",
+    "document_id": 60,
+    "ingested_at": "2026-06-18T19:09:48.797573"
+  },
+  "documents\\Expenditure_on_Public_Funded_Schemes_Projects_dated_01_04_24.pdf": {
+    "hash": "692831c459d30e1844dd5cdd4774ca901d18d753941011fa9ea7f5229f6e562f",
+    "document_id": 61,
+    "ingested_at": "2026-06-18T19:09:48.855232"
+  },
+  "documents\\FInal_GFR_upto_31_07_2024.pdf": {
+    "hash": "9a705ae712470d44b062ebbe91467b00e3b7a5e28a6b8dc3991998fd4370c9c7",
+    "document_id": 62,
+    "ingested_at": "2026-06-18T19:09:59.257480"
+  }
+}
